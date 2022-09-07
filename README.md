@@ -144,23 +144,11 @@ subscriptions.listen_all
 You may want to gracefully shut down your process that handles your Subscriptions. In order to do so, you should define `Kernel.trap` handler to handle your kill signal.
 
 ```ruby
-
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
 subscriptions.create_for_all(handler: proc { |r| p r })
 watcher = EventStoreSubscriptions::WatchDog.new(subscriptions)
 watcher.watch
 subscriptions.listen_all
-
-# Wait while Subscriptions are working
-loop do
-  sleep 1  
-  # You can put here whatever you want. For example - tracking the status of your subscriptions
-  logger.info "Subscriptions number: #{subscriptions.subscriptions.size}"
-  subscriptions.subscriptions.each do |subscription|
-    logger.info "Subscription state: #{subscription.state}"
-    logger.info "Subscription last error: #{subscription.state.last_error}"
-  end
-end
 
 Kernel.trap('TERM') do
   # Because the implementation uses Mutex - wrap it into Thread to bypass the limitations of
@@ -168,9 +156,21 @@ Kernel.trap('TERM') do
   Thread.new do
     # Initiate graceful shutdown
     watcher.unwatch.wait_for_finish
-    subscriptions.stop_all.each(&:wait_for_finish)    
+    subscriptions.stop_all.each(&:wait_for_finish)
   end.join
   exit
+end
+
+logger = Logger.new('subscriptions.log')
+# Wait while Subscriptions are working
+loop do
+  sleep 1  
+  # You can put here whatever you want. For example - tracking the status of your subscriptions
+  logger.info "Subscriptions number: #{subscriptions.subscriptions.size}"
+  subscriptions.subscriptions.each do |subscription|
+    logger.info "Subscription state: #{subscription.state}"
+    logger.info "Subscription statistic: #{subscription.statistic.inspect}"
+  end
 end
 ```
 

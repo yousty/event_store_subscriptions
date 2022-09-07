@@ -3,20 +3,23 @@
 module EventStoreSubscriptions
   class Subscription
     include WaitForFinish
-    ThreadNotDeadError = Class.new(StandardError)
+
+    GRACEFUL_SHUTDOWN_DELAY = 5 # seconds
 
     attr_accessor :runner
-    attr_reader :client, :setup, :state, :position
+    attr_reader :client, :setup, :state, :position, :statistic
     private :runner, :runner=
 
     # @param position [EventStoreSubscriptions::SubscriptionPosition, EventStoreSubscriptions::SubscriptionRevision]
     # @param client [EventStoreClient::GRPC::Client]
     # @param setup [EventStoreSubscriptions::SubscriptionSetup]
-    def initialize(position:, client:, setup:)
+    # @param statistic [EventStoreSubscriptions::SubscriptionStatistic]
+    def initialize(position:, client:, setup:, statistic: SubscriptionStatistic.new)
       @position = position
       @client = client
       @setup = setup
       @state = ObjectState.new
+      @statistic = statistic
       @runner = nil
     end
 
@@ -26,6 +29,7 @@ module EventStoreSubscriptions
       self.runner ||=
         Thread.new do
           Thread.current.abort_on_exception = false
+          Thread.current.report_on_exception = false
           state.running!
           client.subscribe_to_stream(
             *setup.args,
@@ -33,7 +37,8 @@ module EventStoreSubscriptions
             &setup.blk
           )
         rescue StandardError => e
-          state.last_error = e
+          statistic.last_error = e
+          statistic.errors_count += 1
           state.dead!
           raise
         end
@@ -44,14 +49,14 @@ module EventStoreSubscriptions
     # to wait for the runner fully stopped - use #wait_for_finish method.
     # @return [EventStoreSubscriptions::Subscription] returns self
     def stop_listening
-      return self unless state.running?
+      return self unless runner&.alive?
 
       state.halting!
       stopping_at = Time.now.utc
       Thread.new do
         loop do
-          # Give Subscription up to 5 seconds for graceful shutdown
-          if Time.now.utc - stopping_at > 5
+          # Give Subscription up to GRACEFUL_SHUTDOWN_DELAY seconds for graceful shutdown
+          if Time.now.utc - stopping_at > GRACEFUL_SHUTDOWN_DELAY
             runner&.exit
           end
           unless runner&.alive?
@@ -95,7 +100,8 @@ module EventStoreSubscriptions
           result.success,
           *process_response_args
         )
-        original_handler.call(result)
+        original_handler.call(result) if result
+        statistic.events_processed += 1
       end
     end
 
@@ -130,7 +136,8 @@ module EventStoreSubscriptions
       kwargs.merge!(handler: handler(kwargs[:handler]), skip_deserialization: true)
       return kwargs unless position.present?
 
-      kwargs.merge!(options: position.to_option)
+      kwargs[:options] ||= {}
+      kwargs[:options].merge!(position.to_option)
       kwargs
     end
   end

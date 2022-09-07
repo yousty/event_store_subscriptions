@@ -53,7 +53,7 @@ module EventStoreSubscriptions
     #   ```
     # @return [EventStoreSubscriptions::WatchDog] returns self
     def unwatch
-      return self unless state.running?
+      return self unless runner&.alive?
 
       state.halting!
       Thread.new do
@@ -78,9 +78,12 @@ module EventStoreSubscriptions
       return unless collection.remove(old_sub)
 
       new_sub = Subscription.new(
-        position: old_sub.position, client: old_sub.client, setup: old_sub.setup
+        position: old_sub.position,
+        client: old_sub.client,
+        setup: old_sub.setup,
+        statistic: old_sub.statistic
       )
-      new_sub.state.last_error = old_sub.state.last_error
+      new_sub.statistic.last_restart_at = Time.now.utc
       collection.add(new_sub)
       old_sub.delete
       new_sub.listen

@@ -50,7 +50,7 @@ module EventStoreSubscriptions
     # Checks if position's properties are absent
     # @return [Boolean]
     def empty?
-      commit_position.nil? && prepare_position.nil?
+      commit_position.nil? || prepare_position.nil?
     end
 
     # Checks if position's properties are present
