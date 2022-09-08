@@ -6,6 +6,8 @@ module EventStoreSubscriptions
   class WatchDog
     include WaitForFinish
 
+    CHECK_INTERVAL = 5 # seconds. How often to scan subscriptions
+
     class << self
       # @param collection [EventStoreSubscriptions::Subscriptions]
       # @return [EventStoreSubscriptions::WatchDog]
@@ -16,7 +18,7 @@ module EventStoreSubscriptions
 
     attr_accessor :runner
     attr_reader :collection, :state
-    private :collection, :runner, :runner=, :state
+    private :runner, :runner=
 
     # @param collection [EventStoreSubscriptions::Subscriptions]
     def initialize(collection)
@@ -29,16 +31,18 @@ module EventStoreSubscriptions
     # @return [EventStoreSubscriptions::WatchDog] returns self
     def watch
       self.runner ||=
-        Thread.new do
+        begin
           state.running!
-          loop do
-            sleep 1
-            break unless state.running?
-
-            collection.subscriptions.each do |sub|
+          Thread.new do
+            loop do
+              sleep CHECK_INTERVAL
               break unless state.running?
 
-              restart_subscription(sub) if sub.state.dead?
+              collection.subscriptions.each do |sub|
+                break unless state.running?
+
+                restart_subscription(sub) if sub.state.dead?
+              end
             end
           end
         end
@@ -58,6 +62,10 @@ module EventStoreSubscriptions
       state.halting!
       Thread.new do
         loop do
+          # If runner sleeps between runs - we can safely shut down it. Even if edge case happens,
+          # when runner's status changes between its check and `runner.exit` - it is still ok - it
+          # would be shut down anyway because of guard condition `break unless state.running?`
+          runner.exit if runner&.status == 'sleep'
           unless runner&.alive?
             state.stopped!
             self.runner = nil

@@ -134,8 +134,7 @@ Start watching over your Subscriptions collection:
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
 subscriptions.create_for_all(handler: proc { |r| p r })
-watcher = EventStoreSubscriptions::WatchDog.new(subscriptions)
-watcher.watch
+watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
 subscriptions.listen_all
 ```
 
@@ -146,8 +145,7 @@ You may want to gracefully shut down your process that handles your Subscription
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
 subscriptions.create_for_all(handler: proc { |r| p r })
-watcher = EventStoreSubscriptions::WatchDog.new(subscriptions)
-watcher.watch
+watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
 subscriptions.listen_all
 
 Kernel.trap('TERM') do

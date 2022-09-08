@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe EventStoreSubscriptions::Subscription do
+  subject { instance }
+
   let(:instance) { described_class.new(position: position, client: client, setup: setup) }
   let(:position) { EventStoreSubscriptions::SubscriptionPosition.new }
   let(:client) { EventStoreClient.client }
@@ -9,6 +11,8 @@ RSpec.describe EventStoreSubscriptions::Subscription do
   end
   let(:options) { {} }
   let(:handler) { proc { } }
+
+  it { is_expected.to be_a(EventStoreSubscriptions::WaitForFinish) }
 
   describe 'constants' do
     describe 'GRACEFUL_SHUTDOWN_DELAY' do
@@ -33,7 +37,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
       is_expected.to eq(instance)
     end
     it 'starts events listening' do
-      expect { subject; sleep 0.2 }.to change { instance.state.send(:state) }.to(:running)
+      expect { subject }.to change { instance.state.send(:state) }.to(:running)
     end
 
     context 'when error raises in the runner' do
@@ -65,7 +69,6 @@ RSpec.describe EventStoreSubscriptions::Subscription do
     context 'when runner is alive' do
       before do
         instance.listen
-        sleep 0.2
       end
 
       after do

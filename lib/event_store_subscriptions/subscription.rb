@@ -27,20 +27,22 @@ module EventStoreSubscriptions
     # @return [EventStoreSubscriptions::Subscription] returns self
     def listen
       self.runner ||=
-        Thread.new do
-          Thread.current.abort_on_exception = false
-          Thread.current.report_on_exception = false
+        begin
           state.running!
-          client.subscribe_to_stream(
-            *setup.args,
-            **adjusted_kwargs,
-            &setup.blk
-          )
-        rescue StandardError => e
-          statistic.last_error = e
-          statistic.errors_count += 1
-          state.dead!
-          raise
+          Thread.new do
+            Thread.current.abort_on_exception = false
+            Thread.current.report_on_exception = false
+            client.subscribe_to_stream(
+              *setup.args,
+              **adjusted_kwargs,
+              &setup.blk
+            )
+          rescue StandardError => e
+            statistic.last_error = e
+            statistic.errors_count += 1
+            state.dead!
+            raise
+          end
         end
       self
     end
@@ -52,8 +54,8 @@ module EventStoreSubscriptions
       return self unless runner&.alive?
 
       state.halting!
-      stopping_at = Time.now.utc
       Thread.new do
+        stopping_at = Time.now.utc
         loop do
           # Give Subscription up to GRACEFUL_SHUTDOWN_DELAY seconds for graceful shutdown
           if Time.now.utc - stopping_at > GRACEFUL_SHUTDOWN_DELAY

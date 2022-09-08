@@ -3,7 +3,6 @@
 module EventStoreSubscriptions
   class Subscriptions
     attr_reader :client
-    attr_reader :subscriptions
     attr_reader :semaphore
     private :semaphore
 
@@ -36,7 +35,7 @@ module EventStoreSubscriptions
     # @param subscription [EventStoreSubscriptions::Subscription]
     # @return [Array<EventStoreSubscriptions::Subscription>] current Subscription-s collection
     def add(subscription)
-      semaphore.synchronize { subscriptions << subscription }
+      semaphore.synchronize { @subscriptions << subscription }
     end
 
     # Removes Subscription from the collection
@@ -44,17 +43,24 @@ module EventStoreSubscriptions
     # @return [EventStoreSubscriptions::Subscription, nil] returns deleted Subscription or nil if it
     #   wasn't present in the collection
     def remove(subscription)
-      semaphore.synchronize { subscriptions.delete(subscription) }
+      semaphore.synchronize { @subscriptions.delete(subscription) }
     end
 
     # Starts listening all Subscription-s in the collection
+    # @return [Array<EventStoreSubscriptions::Subscription>]
     def listen_all
-      subscriptions.each(&:listen)
+      semaphore.synchronize { @subscriptions.each(&:listen) }
     end
 
     # Stops listening all Subscription-s in the collection
+    # @return [Array<EventStoreSubscriptions::Subscription>]
     def stop_all
-      subscriptions.each(&:stop_listening)
+      semaphore.synchronize { @subscriptions.each(&:stop_listening) }
+    end
+
+    # @return [Array<EventStoreSubscriptions::Subscription>]
+    def subscriptions
+      semaphore.synchronize { @subscriptions.dup }
     end
 
     private
