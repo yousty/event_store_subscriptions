@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module EventStoreSubscriptions
+  # Holds Subscription statistic
   class SubscriptionStatistic
     attr_accessor :last_error, :errors_count, :events_processed, :last_restart_at
 

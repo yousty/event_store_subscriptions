@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module EventStoreSubscriptions
+  # Implements Subscription-s collection
   class Subscriptions
     attr_reader :client
     attr_reader :semaphore
