@@ -11,6 +11,8 @@ module EventStoreSubscriptions
 
     private
 
+    # @param hash [Hash]
+    # @return [Hash]
     def deep_dup(hash)
       result = {}
       hash.each_pair do |k, v|
