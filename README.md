@@ -3,11 +3,11 @@
 
 # EventStoreSubscriptions
 
-Implements EventStore DB Catch-up Subscriptions manager. 
+Extends the functionality of the [EventStoreDB ruby client](https://github.com/yousty/event_store_client) with a catch-up subscriptions manager. 
 
-By default `event_store_client` implements thread-blocking methods to subscribe to stream. Those are `#subscribe_to_stream` and `#subscribe_to_all`. Thus, in order to subscribe to many streams/events, you would need to implement async subscriptions by your own. This gem solves this task by putting each Subscription into its own Thread.
+By default `event_store_client` implements thread-blocking methods to subscribe to a stream. Those are `#subscribe_to_stream` and `#subscribe_to_all`. In order to subscribe to many streams/events, you need to implement asynchronous subscriptions on your own. This gem solves this task by putting each subscription into its own thread.
 
-Thread-based implementation has its own downsides - any IO operation in your Subscriptions' handlers will block all other Threads. Thus, it is up to you how many Subscriptions to put into a single process. There is a plan to integrate Ractors instead/alongside Threads to provide the option to eliminate IO-blocking issue.
+The thread-based implementation has a downside: any IO operation in your subscription's handlers will block all other threads. So it is important to consider how many subscriptions you put into a single process. There is a plan to integrate Ractors instead/alongside threads to provide the option to eliminate the IO-blocking issue.
 
 ## Installation
 
@@ -27,11 +27,11 @@ Or install it yourself as:
 
 ## Usage
 
-Use `#create` and `#create_for_all` methods to subscribe to a stream. For the full list of available arguments - see the documentation by `EventStoreClient::GRPC::Client#subscribe_to_stream` method in the [event_store_client gem docs](https://rubydoc.info/gems/event_store_client). You may also want to check the `Catch-up subscriptions` section there as well.
+Use the `#create` and `#create_for_all` methods to subscribe to a stream. For the full list of available arguments see the documentation of the `EventStoreClient::GRPC::Client#subscribe_to_stream` method in the [event_store_client gem docs](https://rubydoc.info/gems/event_store_client). You may also want to check the `Catch-up subscriptions` section there as well.
 
-### Subscribing to the specific stream
+### Subscribing to a specific stream
 
-In order to subscribe to specific stream - use `#create` method:
+Use the `#create` method in order to subscribe to specific stream:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -63,9 +63,9 @@ subscriptions.create('some-stream', handler: SomeStreamHandler.new)
 subscriptions.listen_all
 ```
 
-### Subscribing to $all stream
+### Subscribing to the $all stream
 
-In order to subscribe to specific stream - use `#create_for_all` method:
+Use the `#create_for_all` method to subscribe to the all stream:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -80,7 +80,7 @@ subscriptions.create_for_all(handler: handler)
 subscriptions.listen_all
 ```
 
-You may also explicitly pass `"$all"` stream name to `#create` method:
+You may also explicitly pass `"$all"` stream name to the `#create` method:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -97,11 +97,11 @@ subscriptions.listen_all
 
 ### Handling Subscription position updates
 
-You may want to add a handler that will be executed each time a Subscription gets position updates. Such updates happen when new event is added to the stream or when EventStore DB produces a checkpoint response.
+You may want to add a handler that will be executed each time a subscription gets position updates. Such updates happen when new events are added to the stream or when EventStore DB produces a checkpoint response.
 
-#### Listening for position updates of specific stream
+#### Listening for position updates of a specific stream
 
-Handler, registered to receive updates of position of a specific stream is called with `EventStoreSubscriptions::SubscriptionRevision` class instance. It holds current revision of stream.
+A handler registered to receive position updates of a specific stream is called with the `EventStoreSubscriptions::SubscriptionRevision` class instance. It holds the current revision of the stream.
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -112,9 +112,9 @@ end
 subscription.listen
 ```
 
-#### Listening for position updates of $all stream
+#### Listening for position updates of the $all stream
 
-Handler, registered to receive updates of position of a `$all` stream is called with `EventStoreSubscriptions::SubscriptionPosition` class instance. It holds current `commit_position` and `prepare_position` of `$all` stream.
+A handler registered to receive position updates of the `$all` stream is called with the `EventStoreSubscriptions::SubscriptionPosition` class instance. It holds the current `commit_position` and `prepare_position` of the `$all` stream.
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -127,9 +127,9 @@ subscription.listen
 
 ### Automatic restart of failed Subscriptions
 
-This gem provides a possibility to watch over your Subscriptions collections and restart a Subscription in case it failed. Subscription may fail because an exception was raised in either its handler or in position update hook. New Subscription will start from the position the failed Subscription has stopped. 
+This gem provides a possibility to watch over your subscription collections and restart a subscription in case it failed. Subscriptions may fail because an exception was raised in the handler or in the position update hook. A new subscription will be started, listening from the position the failed subscription has stopped. 
 
-Start watching over your Subscriptions collection:
+Start watching over your subscriptions collection:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -140,7 +140,7 @@ subscriptions.listen_all
 
 ### Graceful shutdown
 
-You may want to gracefully shut down your process that handles your Subscriptions. In order to do so, you should define `Kernel.trap` handler to handle your kill signal.
+You may want to gracefully shut down the process that handles the subscriptions. In order to do so, you should define a `Kernel.trap` handler to handle your kill signal:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -172,7 +172,7 @@ loop do
 end
 ```
 
-Now, when you want to gracefully shut down your process - just send `TERM` signal:
+Now just send the `TERM` signal if you want to gracefully shut down your process:
 
 ```bash
 kill -TERM <pid of your process>
@@ -180,13 +180,13 @@ kill -TERM <pid of your process>
 
 ## Development
 
-You will have to install Docker first. It is needed to run EventStore DB. You can run EventStore DB with next command:
+You will have to install Docker first. It is needed to run EventStore DB. You can run EventStore DB with this command:
 
 ```shell
 docker-compose -f docker-compose-cluster.yml up
 ```
 
-Now you can enter dev console by running `bin/console` or run tests by running `rspec` command.
+Now you can enter a dev console by running `bin/console` or run tests by running the `rspec` command.
 
 ## Contributing
 
