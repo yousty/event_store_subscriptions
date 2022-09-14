@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module EventStoreSubscriptions
-  # Handles arguments in itself that was used to create a Subscription. We need to persist them for
-  # the later adjustment and delegation.
+  # Handles arguments that were used to create a subscription. We need to persist them for
+  # later adjustment and delegation.
   class SubscriptionSetup < Struct.new(:args, :kwargs, :blk)
     # @return [EventStoreSubscriptions::SubscriptionSetup]
     def dup

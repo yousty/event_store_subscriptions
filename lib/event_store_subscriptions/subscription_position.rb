@@ -2,7 +2,7 @@
 
 module EventStoreSubscriptions
   # This class is used to persist and update commit_position and prepare_position when subscribing
-  # to "$all" stream.
+  # to the "$all" stream.
   class SubscriptionPosition < Struct.new(:commit_position, :prepare_position)
     attr_reader :update_hooks
 
@@ -11,7 +11,7 @@ module EventStoreSubscriptions
       @update_hooks = []
     end
 
-    # Updates the position from GRPC response.
+    # Updates the position from the GRPC response.
     # @param response [EventStore::Client::Streams::ReadResp] GRPC EventStore object. See its
     #   structure in the lib/event_store_client/adapters/grpc/generated/streams_pb.rb file in
     #   `event_store_client` gem.
@@ -20,8 +20,8 @@ module EventStoreSubscriptions
       source = response.checkpoint || response.event&.event
       return false unless source
 
-      # Updating position values in memory first to prevent the situation when update hook fails and,
-      # thus keeping the position not up to date
+      # Updating position values in memory first to prevent the situation when the update hook fails,
+      # and the position is not up to date.
       self.commit_position, self.prepare_position =
         source.commit_position, source.prepare_position
 

@@ -47,8 +47,8 @@ module EventStoreSubscriptions
       self
     end
 
-    # Stop listening for the events. This command is async - the result is not immediate. In order
-    # to wait for the runner fully stopped - use #wait_for_finish method.
+    # Stops listening for events. This command is async - the result is not immediate. Use the #wait_for_finish 
+    # method to wait until the runner has fully stopped.
     # @return [EventStoreSubscriptions::Subscription] returns self
     def stop_listening
       return self unless runner&.alive?
@@ -90,7 +90,7 @@ module EventStoreSubscriptions
 
     private
 
-    # Wraps original handler into our own handler to provide extended functional.
+    # Wraps original handler into our own handler to provide extended functionality.
     # @param original_handler [#call]
     # @return [Proc]
     def handler(original_handler)
@@ -108,9 +108,9 @@ module EventStoreSubscriptions
     end
 
     # Calculates "skip_deserialization" and "skip_decryption" arguments for the ProcessResponse
-    # class. Since we overridden original handler - we need to calculate correct values of arguments
-    # to process the response by our own. This method implements the same behavior
-    # the event_store_client gem implements(EventStoreClient::GRPC::Client#subscribe_to_stream
+    # class. Since we have overridden the original handler, we need to calculate the correct argument values
+    # to process the response on our own. This method implements the same behavior as
+    # the event_store_client gem implements (EventStoreClient::GRPC::Client#subscribe_to_stream
     # method).
     # @return [Array<Boolean>]
     def process_response_args

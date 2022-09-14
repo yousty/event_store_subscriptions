@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module EventStoreSubscriptions
-  # Watches over the given Subscriptions collection and restarts dead Subscription-s. It is useful
-  # in cases when your Subscription's handler raises error. Its usage is optional.
+  # Watches over the given subscriptions collection and restarts dead subscriptions. It is useful
+  # in cases when your subscription's handler raises error. Its usage is optional.
   class WatchDog
     include WaitForFinish
 
@@ -49,8 +49,8 @@ module EventStoreSubscriptions
       self
     end
 
-    # Stop watching over the given Subscriptions collection. This command is async - the result is
-    # not immediate. In order to wait for the runner fully stopped - use #wait_for_finish method.
+    # Stop watching over the given subscriptions collection. This command is async - the result is
+    # not immediate. Use the #wait_for_finish method in order to wait until the runner has fully stopped .
     # Example:
     #   ```ruby
     #   watch_dog.unwatch.wait_for_finish
@@ -62,9 +62,9 @@ module EventStoreSubscriptions
       state.halting!
       Thread.new do
         loop do
-          # If runner sleeps between runs - we can safely shut down it. Even if edge case happens,
-          # when runner's status changes between its check and `runner.exit` - it is still ok - it
-          # would be shut down anyway because of guard condition `break unless state.running?`
+          # If runner sleeps between runs we can safely shut it down. Even if the edge case happens,
+          # when a runner's status changes between its check and `runner.exit`, it is still ok, it
+          # would be shut down anyway because of the guard condition `break unless state.running?`
           runner.exit if runner&.status == 'sleep'
           unless runner&.alive?
             state.stopped!

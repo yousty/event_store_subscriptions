@@ -13,7 +13,7 @@ module EventStoreSubscriptions
 
     # Updates the revision from GRPC response.
     # @param response [EventStore::Client::Streams::ReadResp] GRPC EventStore object. See its
-    #   structure in the lib/event_store_client/adapters/grpc/generated/streams_pb.rb file in
+    #   structure in the lib/event_store_client/adapters/grpc/generated/streams_pb.rb file in the
     #   `event_store_client` gem.
     # @return [Boolean] whether the revision was updated
     def update(response)

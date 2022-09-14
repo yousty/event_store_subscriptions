@@ -25,7 +25,7 @@ module EventStoreSubscriptions
       subscription
     end
 
-    # Shortcut to create a Subscription to subscribe to '$all' stream
+    # Shortcut to create a Subscription to subscribe to the '$all' stream
     # @see EventStoreClient::GRPC::Client#subscribe_to_all documentation for available params
     # @return [EventStoreSubscriptions::Subscription]
     def create_for_all(**kwargs, &blk)
@@ -34,26 +34,26 @@ module EventStoreSubscriptions
 
     # Adds Subscription to the collection
     # @param subscription [EventStoreSubscriptions::Subscription]
-    # @return [Array<EventStoreSubscriptions::Subscription>] current Subscription-s collection
+    # @return [Array<EventStoreSubscriptions::Subscription>] current subscription's collection
     def add(subscription)
       semaphore.synchronize { @subscriptions << subscription }
     end
 
-    # Removes Subscription from the collection
+    # Removes subscription from the collection
     # @param subscription [EventStoreSubscriptions::Subscription]
-    # @return [EventStoreSubscriptions::Subscription, nil] returns deleted Subscription or nil if it
+    # @return [EventStoreSubscriptions::Subscription, nil] returns deleted subscription or nil if it
     #   wasn't present in the collection
     def remove(subscription)
       semaphore.synchronize { @subscriptions.delete(subscription) }
     end
 
-    # Starts listening all Subscription-s in the collection
+    # Starts listening to all subscriptions in the collection
     # @return [Array<EventStoreSubscriptions::Subscription>]
     def listen_all
       semaphore.synchronize { @subscriptions.each(&:listen) }
     end
 
-    # Stops listening all Subscription-s in the collection
+    # Stops listening to all subscriptions in the collection
     # @return [Array<EventStoreSubscriptions::Subscription>]
     def stop_all
       semaphore.synchronize { @subscriptions.each(&:stop_listening) }
