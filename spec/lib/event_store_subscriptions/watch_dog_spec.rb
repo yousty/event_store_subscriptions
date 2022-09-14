@@ -12,10 +12,6 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
     describe 'CHECK_INTERVAL' do
       subject { described_class::CHECK_INTERVAL }
 
-      before do
-
-      end
-
       it { is_expected.to eq(5) }
     end
   end
@@ -72,14 +68,14 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
         subscription.state.dead!
       end
 
-      it 'restarts it' do
+      it 'replaces it' do
         expect { subject; sleep 0.2 }.to change { collection.subscriptions.first.__id__ }
       end
       it 'does not keep old one' do
         expect { subject; sleep 0.2 }.not_to change { collection.subscriptions.size }
       end
 
-      describe 'restarted Subscription' do
+      describe 'replaced Subscription' do
         subject { super(); sleep 0.2; collection.subscriptions.first }
 
         let!(:position) { subscription.position }

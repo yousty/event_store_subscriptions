@@ -257,9 +257,9 @@ RSpec.describe EventStoreSubscriptions::Subscription do
           ).success.success.position
         instance.position.commit_position = position.commit_position
         instance.position.prepare_position = position.prepare_position
-        # Generate another event for another stream. It will help us to unsure that the given
-        # SubscriptionPosition does not break other options. E.g. if to break :filter - this event
-        # will pop up in the result
+        # Generate another event for another stream. It will help us to ensure that the given
+        # SubscriptionPosition does not break other options. E.g. if to break :filter option - this
+        # event will pop up in the result
         EventStoreClient.client.append_to_stream(
           "some-another-stream$#{SecureRandom.uuid}",
           EventStoreClient::DeserializedEvent.new
@@ -270,7 +270,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
         instance.stop_listening.wait_for_finish
       end
 
-      it 'respects that position by skipping events that comes before it' do
+      it 'skips events before current position' do
         expect {
           instance.listen
           sleep 0.5

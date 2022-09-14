@@ -58,9 +58,8 @@ module EventStoreSubscriptions
         stopping_at = Time.now.utc
         loop do
           # Give Subscription up to GRACEFUL_SHUTDOWN_DELAY seconds for graceful shutdown
-          if Time.now.utc - stopping_at > GRACEFUL_SHUTDOWN_DELAY
-            runner&.exit
-          end
+          runner&.exit if Time.now.utc - stopping_at > GRACEFUL_SHUTDOWN_DELAY
+
           unless runner&.alive?
             state.stopped!
             self.runner = nil
@@ -82,9 +81,7 @@ module EventStoreSubscriptions
         raise ThreadNotDeadError, "Can not delete alive Subscription #{self.inspect}"
       end
 
-      instance_variables.each do |var|
-        instance_variable_set(var, nil)
-      end
+      instance_variables.each { |var| instance_variable_set(var, nil) }
       freeze
     end
 
@@ -96,14 +93,14 @@ module EventStoreSubscriptions
     def handler(original_handler)
       proc do |result|
         Thread.current.exit unless state.running?
-
-        position.update(result.success)
+        original_result = result.success
         result = EventStoreClient::GRPC::Shared::Streams::ProcessResponse.new.call(
           result.success,
           *process_response_args
         )
         original_handler.call(result) if result
         statistic.events_processed += 1
+        position.update(original_result)
       end
     end
 

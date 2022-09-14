@@ -3,7 +3,7 @@
 RSpec.describe EventStoreSubscriptions::ObjectState do
   let(:instance) { described_class.new }
 
-  shared_examples 'in the appropriate state' do
+  shared_examples 'state transition methods work as expected' do
     context 'when object is in the given state' do
       before do
         instance.public_send("#{state}!")
@@ -40,7 +40,7 @@ RSpec.describe EventStoreSubscriptions::ObjectState do
   describe '#initial?' do
     subject { instance.initial? }
 
-    it_behaves_like 'in the appropriate state' do
+    it_behaves_like 'state transition methods work as expected' do
       let(:state) { :initial }
     end
 
@@ -52,7 +52,7 @@ RSpec.describe EventStoreSubscriptions::ObjectState do
   describe '#running?' do
     subject { instance.running? }
 
-    it_behaves_like 'in the appropriate state' do
+    it_behaves_like 'state transition methods work as expected' do
       let(:state) { :running }
     end
   end
@@ -60,7 +60,7 @@ RSpec.describe EventStoreSubscriptions::ObjectState do
   describe '#halting?' do
     subject { instance.halting? }
 
-    it_behaves_like 'in the appropriate state' do
+    it_behaves_like 'state transition methods work as expected' do
       let(:state) { :halting }
     end
   end
@@ -68,7 +68,7 @@ RSpec.describe EventStoreSubscriptions::ObjectState do
   describe '#stopped?' do
     subject { instance.stopped? }
 
-    it_behaves_like 'in the appropriate state' do
+    it_behaves_like 'state transition methods work as expected' do
       let(:state) { :stopped }
     end
   end
@@ -76,7 +76,7 @@ RSpec.describe EventStoreSubscriptions::ObjectState do
   describe '#dead?' do
     subject { instance.dead? }
 
-    it_behaves_like 'in the appropriate state' do
+    it_behaves_like 'state transition methods work as expected' do
       let(:state) { :dead }
     end
   end
