@@ -61,6 +61,7 @@ module EventStoreSubscriptions
 
     # @return [Array<EventStoreSubscriptions::Subscription>]
     def subscriptions
+      # Duping original collection to prevent potential mutable operations over it from user's side
       semaphore.synchronize { @subscriptions.dup }
     end
 

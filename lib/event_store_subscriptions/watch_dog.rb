@@ -10,21 +10,27 @@ module EventStoreSubscriptions
 
     class << self
       # @param collection [EventStoreSubscriptions::Subscriptions]
+      # @param restart_terminator [Proc, nil]
       # @return [EventStoreSubscriptions::WatchDog]
-      def watch(collection)
+      def watch(collection, restart_terminator: nil)
         new(collection).watch
       end
     end
 
     attr_accessor :runner
-    attr_reader :collection, :state
-    private :runner, :runner=
+    attr_reader :collection, :state, :restart_terminator
+    private :runner, :runner=, :restart_terminator
 
     # @param collection [EventStoreSubscriptions::Subscriptions]
-    def initialize(collection)
+    # @param restart_terminator [Proc, nil] define a terminator that would halt Subscription restart
+    #   process if the result of it execution is truthy. Subscription instance will be passed as a
+    #   first argument into it, and, based on it, you should decide whether to process the restart
+    #   or not.
+    def initialize(collection, restart_terminator: nil)
       @collection = collection
       @state = ObjectState.new
       @runner = nil
+      @restart_terminator = restart_terminator
     end
 
     # Start watching over the given Subscriptions collection
@@ -44,6 +50,9 @@ module EventStoreSubscriptions
                 restart_subscription(sub) if sub.state.dead?
               end
             end
+          rescue StandardError => e
+            state.dead!
+            raise
           end
         end
       self
@@ -79,21 +88,22 @@ module EventStoreSubscriptions
 
     private
 
-    # @param old_sub [EventStoreSubscriptions::Subscription]
+    # @param failed_sub [EventStoreSubscriptions::Subscription]
     # @return [EventStoreSubscriptions::Subscription] newly created Subscription
-    def restart_subscription(old_sub)
+    def restart_subscription(failed_sub)
+      return if restart_terminator&.call(failed_sub)
       # Check if no one else did this job
-      return unless collection.remove(old_sub)
+      return unless collection.remove(failed_sub)
 
       new_sub = Subscription.new(
-        position: old_sub.position,
-        client: old_sub.client,
-        setup: old_sub.setup,
-        statistic: old_sub.statistic
+        position: failed_sub.position,
+        client: failed_sub.client,
+        setup: failed_sub.setup,
+        statistic: failed_sub.statistic
       )
       new_sub.statistic.last_restart_at = Time.now.utc
       collection.add(new_sub)
-      old_sub.delete
+      failed_sub.delete
       new_sub.listen
     end
   end

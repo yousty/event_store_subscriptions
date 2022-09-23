@@ -4,7 +4,7 @@ module EventStoreSubscriptions
   class Subscription
     include WaitForFinish
 
-    GRACEFUL_SHUTDOWN_DELAY = 5 # seconds
+    FORCED_SHUTDOWN_DELAY = 60 # seconds
 
     attr_accessor :runner
     attr_reader :client, :setup, :state, :position, :statistic
@@ -57,8 +57,8 @@ module EventStoreSubscriptions
       Thread.new do
         stopping_at = Time.now.utc
         loop do
-          # Give Subscription up to GRACEFUL_SHUTDOWN_DELAY seconds for graceful shutdown
-          runner&.exit if Time.now.utc - stopping_at > GRACEFUL_SHUTDOWN_DELAY
+          # Give Subscription up to FORCED_SHUTDOWN_DELAY seconds for graceful shutdown
+          runner&.exit if Time.now.utc - stopping_at > FORCED_SHUTDOWN_DELAY
 
           unless runner&.alive?
             state.stopped!

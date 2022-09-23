@@ -3,8 +3,9 @@
 RSpec.describe EventStoreSubscriptions::WatchDog do
   subject { instance }
 
-  let(:instance) { described_class.new(collection) }
+  let(:instance) { described_class.new(collection, restart_terminator: restart_terminator) }
   let(:collection) { EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client) }
+  let(:restart_terminator) { nil }
 
   it { is_expected.to be_a(EventStoreSubscriptions::WaitForFinish) }
 
@@ -105,6 +106,24 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
         it 'sets #last_restart_at of the statistic' do
           subject
           expect(subject.statistic.last_restart_at).to be_between(Time.now - 2, Time.now)
+        end
+      end
+
+      context 'when restart terminator is given' do
+        let(:restart_terminator) { :itself.to_proc }
+
+        context 'when it returns truthy result' do
+          it 'does not restart the subscription' do
+            expect { subject; sleep 0.2 }.not_to change { collection.subscriptions.first.__id__ }
+          end
+        end
+
+        context 'when it returns falsey result' do
+          let(:restart_terminator) { nil }
+
+          it 'restarts the subscription' do
+            expect { subject; sleep 0.2 }.to change { collection.subscriptions.first.__id__ }
+          end
         end
       end
     end

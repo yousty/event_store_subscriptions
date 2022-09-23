@@ -15,10 +15,10 @@ RSpec.describe EventStoreSubscriptions::Subscription do
   it { is_expected.to be_a(EventStoreSubscriptions::WaitForFinish) }
 
   describe 'constants' do
-    describe 'GRACEFUL_SHUTDOWN_DELAY' do
-      subject { described_class::GRACEFUL_SHUTDOWN_DELAY }
+    describe 'FORCED_SHUTDOWN_DELAY' do
+      subject { described_class::FORCED_SHUTDOWN_DELAY }
 
-      it { is_expected.to eq(5) }
+      it { is_expected.to eq(60) }
     end
   end
 
@@ -26,7 +26,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
     subject { instance.listen }
 
     before do
-      stub_const('EventStoreSubscriptions::Subscription::GRACEFUL_SHUTDOWN_DELAY', 0)
+      stub_const('EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY', 0)
     end
 
     after do
@@ -63,7 +63,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
     subject { instance.stop_listening }
 
     before do
-      stub_const('EventStoreSubscriptions::Subscription::GRACEFUL_SHUTDOWN_DELAY', 0)
+      stub_const('EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY', 0)
     end
 
     context 'when runner is alive' do
@@ -123,7 +123,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
 
     context 'when runner is alive' do
       before do
-        stub_const('EventStoreSubscriptions::Subscription::GRACEFUL_SHUTDOWN_DELAY', 0)
+        stub_const('EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY', 0)
         instance.listen
         sleep 0.2
       end
@@ -194,7 +194,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
     let(:responses) { [] }
 
     before do
-      stub_const('EventStoreSubscriptions::Subscription::GRACEFUL_SHUTDOWN_DELAY', 0)
+      stub_const('EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY', 0)
     end
 
     describe 'events processing' do

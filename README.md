@@ -1,5 +1,5 @@
-![Run tests](https://github.com/yousty/event_store_client/workflows/Run%20tests/badge.svg?branch=master&event=push)
-[![Gem Version](https://badge.fury.io/rb/event_store_client.svg)](https://badge.fury.io/rb/event_store_client)
+![Run tests](https://github.com/yousty/event_store_subscriptions/workflows/Run%20tests/badge.svg?branch=main&event=push)
+[![Gem Version](https://badge.fury.io/rb/event_store_subscriptions.svg)](https://badge.fury.io/rb/event_store_subscriptions)
 
 # EventStoreSubscriptions
 
@@ -129,13 +129,63 @@ subscription.listen
 
 This gem provides a possibility to watch over your subscription collections and restart a subscription in case it failed. Subscriptions may fail because an exception was raised in the handler or in the position update hook. A new subscription will be started, listening from the position the failed subscription has stopped. 
 
-Start watching over your subscriptions collection:
+Start watching over your subscriptions' collection:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
 subscriptions.create_for_all(handler: proc { |r| p r })
-watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
+EventStoreSubscriptions::WatchDog.watch(subscriptions)
 subscriptions.listen_all
+```
+
+### Async nature of this gem
+
+`EventStoreSubscriptions::Subscriptions#listen_all`, `EventStoreSubscriptions::Subscriptions#stop_all`, `EventStoreSubscriptions::Subscription#listen`, `EventStoreSubscriptions::Subscription#stop_listening`, `EventStoreSubscriptions::WatchDog#watch`, `EventStoreSubscriptions::WatchDog#unwatch` methods are asynchronous. This means that they spawn thread that performs proper task in the background.
+
+`EventStoreSubscriptions::Subscriptions#stop_all`, `EventStoreSubscriptions::Subscription#stop_listening` and `EventStoreSubscriptions::WatchDog#unwatch` methods has ending run time, meaning that they runners won't run forever.
+
+`EventStoreSubscriptions::Subscriptions#listen_all`, `EventStoreSubscriptions::Subscription#listen` and `EventStoreSubscriptions::WatchDog#watch` methods will run forever.
+
+In order to stop running `Subscription` or `WatchDog` you should initiate stop process and wait for finish.
+
+#### Stopping Subscription
+
+For single subscription:
+
+```ruby
+subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
+subscription = subscriptions.create_for_all(handler: proc { |r| p r })
+subscription.listen
+
+# Initiate Subscription shutdown
+subscription.stop_listening
+# Wait for Subscription to finish. This will block current Thread.
+subscription.wait_for_finish
+```
+
+For the entire collection:
+
+```ruby
+subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
+subscriptions.create_for_all(handler: proc { |r| p r })
+subscriptions.listen_all
+
+# Initiate shutdown for each Subscription in the collection
+subscriptions.stop_all
+# Wait for all Subscriptions to finish. This will block current Thread.
+subscriptions.subscriptions.each(&:wait_for_finish)
+```
+
+#### Stopping WatchDog
+
+```ruby
+subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
+watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
+
+# Initiate WatchDog shutdown
+watcher.unwatch
+# Wait for WatchDog to finish. This will block current Thread.
+watcher.wait_for_finish
 ```
 
 ### Graceful shutdown
@@ -152,30 +202,58 @@ Kernel.trap('TERM') do
   # Because the implementation uses Mutex - wrap it into Thread to bypass the limitations of
   # Kernel#trap
   Thread.new do
-    # Initiate graceful shutdown
+    # Initiate graceful shutdown. Need to shutdown watcher first, and then - subscriptions
     watcher.unwatch.wait_for_finish
     subscriptions.stop_all.each(&:wait_for_finish)
   end.join
   exit
 end
 
-logger = Logger.new('subscriptions.log')
 # Wait while Subscriptions are working
-loop do
-  sleep 1  
-  # You can put here whatever you want. For example - tracking the status of your subscriptions
-  logger.info "Subscriptions number: #{subscriptions.subscriptions.size}"
-  subscriptions.subscriptions.each do |subscription|
-    logger.info "Subscription state: #{subscription.state}"
-    logger.info "Subscription statistic: #{subscription.statistic.inspect}"
-  end
-end
+subscriptions.each(&:wait_for_finish)
 ```
 
 Now just send the `TERM` signal if you want to gracefully shut down your process:
 
 ```bash
 kill -TERM <pid of your process>
+```
+
+### Monitoring Subscriptions
+
+After you started listening your Subscriptions, you may want to monitor status of them. There is various built-in statistics which you can get.
+
+```ruby
+subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
+subscriptions.create_for_all(handler: proc { |r| p r })
+watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
+subscriptions.listen_all
+
+loop do
+  sleep 1
+  subscriptions.subscriptions.each do |subscription|
+    puts "Current state is: #{subscription.state}"
+    puts "Current position: #{subscription.position.to_h}"
+    puts "Last error: #{subscription.statistic.last_error.inspect}"
+    puts "Last restart was at: #{subscription.statistic.last_restart_at || 'Never'}"
+    puts "Total errors/restarts: #{subscription.statistic.errors_count}"
+    puts "Events processed: #{subscription.statistic.events_processed}"
+    puts "Current watcher state is: #{watcher.state}"
+  end
+end
+```
+
+### WatchDog and control of restart condition of Subscriptions
+
+You may want to decide yourself whether `WhatchDog` should restart a `Subscription`. You can do so by providing a proc which, if thruthy result is returned, skips the restart of `Subscription`.
+
+```ruby
+subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
+subscriptions.create_for_all(handler: proc { |r| p r })
+# Do not restart Subscription if its id is even
+restart_terminator = proc { |sub| sub.__id__ % 2 == 0 }
+EventStoreSubscriptions::WatchDog.watch(subscriptions, restart_terminator: restart_terminator)
+subscriptions.listen_all
 ```
 
 ## Development
