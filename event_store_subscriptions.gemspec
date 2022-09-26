@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/yousty/event_store_subscriptions"
 
-  spec.files = Dir['{lib}/**/*', 'MIT-LICENSE', 'README.md', 'docs/**/*']
+  spec.files = Dir['{lib}/**/*', 'LICENSE.txt', 'README.md', 'docs/**/*']
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]

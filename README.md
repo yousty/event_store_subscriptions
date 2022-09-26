@@ -27,7 +27,7 @@ Or install it yourself as:
 
 ## Usage
 
-Use the `#create` and `#create_for_all` methods to subscribe to a stream. For the full list of available arguments see the documentation of the `EventStoreClient::GRPC::Client#subscribe_to_stream` method in the [event_store_client gem docs](https://rubydoc.info/gems/event_store_client). You may also want to check the `Catch-up subscriptions` section there as well.
+Use the `#create` and `#create_for_all` methods to subscribe to a stream. For the full list of available arguments see the documentation of the `EventStoreClient::GRPC::Client#subscribe_to_stream` method in the [event_store_client gem docs](https://rubydoc.info/gems/event_store_client). You may also want to check the [Catch-up subscriptions](https://github.com/yousty/event_store_client/blob/master/docs/catch_up_subscriptions.md) section as well.
 
 ### Subscribing to a specific stream
 
@@ -268,7 +268,7 @@ Now you can enter a dev console by running `bin/console` or run tests by running
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/event_store_subscriptions. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/event_store_subscriptions/blob/master/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at https://github.com/yousty/event_store_subscriptions. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/yousty/event_store_subscriptions/blob/master/CODE_OF_CONDUCT.md).
 
 ### Publishing new version
 
@@ -281,4 +281,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the EventStoreSubscriptions project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/event_store_subscriptions/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the EventStoreSubscriptions project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/yousty/event_store_subscriptions/blob/master/CODE_OF_CONDUCT.md).
