@@ -95,7 +95,7 @@ module EventStoreSubscriptions
         Thread.current.exit unless state.running?
         original_result = result.success
         result = EventStoreClient::GRPC::Shared::Streams::ProcessResponse.new.call(
-          result.success,
+          original_result,
           *process_response_args
         )
         original_handler.call(result) if result

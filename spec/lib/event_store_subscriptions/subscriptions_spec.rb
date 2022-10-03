@@ -4,6 +4,15 @@ RSpec.describe EventStoreSubscriptions::Subscriptions do
   let(:instance) { described_class.new(client) }
   let(:client) { EventStoreClient.client }
 
+  describe 'constants' do
+    describe 'ALL_STREAM' do
+      subject { described_class::ALL_STREAM }
+
+      it { is_expected.to eq('$all') }
+      it { is_expected.to be_frozen }
+    end
+  end
+
   describe '#create' do
     subject { instance.create(*args, **kwargs, &blk) }
 

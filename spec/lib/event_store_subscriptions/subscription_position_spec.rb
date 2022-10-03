@@ -39,6 +39,21 @@ RSpec.describe EventStoreSubscriptions::SubscriptionPosition do
       it 'executes registered update hooks' do
         expect { subject }.to change { positions.size }.by(1)
       end
+
+      context 'when handler raises error' do
+        let(:handler) { proc { raise error } }
+        let(:error) { Class.new(StandardError) }
+
+        it 'raises that error' do
+          expect { subject }.to raise_error(error)
+        end
+        it 'updates commit_position' do
+          expect { subject rescue nil }.to change { instance.commit_position }.to(commit_position)
+        end
+        it 'updates prepare_position' do
+          expect { subject rescue nil }.to change { instance.prepare_position }.to(prepare_position)
+        end
+      end
     end
 
     context 'when response is a checkpoint' do

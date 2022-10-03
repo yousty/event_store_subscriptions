@@ -35,6 +35,18 @@ RSpec.describe EventStoreSubscriptions::SubscriptionRevision do
       it 'executes registered update hooks' do
         expect { subject }.to change { positions.size }.by(1)
       end
+
+      context 'when handler raises error' do
+        let(:handler) { proc { raise error } }
+        let(:error) { Class.new(StandardError) }
+
+        it 'raises that error' do
+          expect { subject }.to raise_error(error)
+        end
+        it 'updates revision' do
+          expect { subject rescue nil }.to change { instance.revision }.to(revision)
+        end
+      end
     end
 
     context 'when response is something else' do

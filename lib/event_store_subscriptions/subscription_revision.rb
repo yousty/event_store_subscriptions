@@ -32,10 +32,10 @@ module EventStoreSubscriptions
     # handlers as you want.
     # Example:
     #   ```ruby
-    #   instance.register_update_hook do |position|
+    #   subscription_revision.register_update_hook do |position|
     #     # do something with the position. E.g. persist it somewhere
     #   end
-    #   instance.register_update_hook do |position|
+    #   subscription_revision.register_update_hook do |position|
     #     # do something else with the position
     #   end
     #   ```
