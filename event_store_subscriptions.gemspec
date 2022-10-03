@@ -19,16 +19,12 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/yousty/event_store_subscriptions"
 
-  spec.files = Dir['{lib}/**/*', 'MIT-LICENSE', 'README.md', 'docs/**/*']
+  spec.files = Dir['{lib}/**/*', 'LICENSE.txt', 'README.md', 'docs/**/*']
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Uncomment to register a new dependency of your gem
-  # spec.add_dependency "example-gem", "~> 1.0"
-
-  # For more information and examples about making a new gem, checkout our
-  # guide at: https://bundler.io/guides/creating_gem.html
+  spec.add_dependency "event_store_client", '~> 2.0'
 
   spec.add_development_dependency 'pry', '~> 0.14'
   spec.add_development_dependency 'rspec', '~> 3.11'
