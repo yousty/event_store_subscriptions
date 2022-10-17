@@ -41,10 +41,9 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
   describe '#watch' do
     subject { instance.watch }
 
-    let(:subscription) { collection.create_for_all(handler: proc { }) }
-
     before do
       stub_const("#{described_class}::CHECK_INTERVAL", 0.1)
+      stub_const("EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY", 0.1)
     end
 
     after do
@@ -65,48 +64,31 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
     end
 
     context 'when Subscription dies' do
+      let(:subscription) { collection.create_for_all(handler: proc { }) }
+
       before do
         subscription.state.dead!
       end
 
-      it 'replaces it' do
-        expect { subject; sleep 0.2 }.to change { collection.subscriptions.first.__id__ }
+      after do
+        subscription.stop_listening.wait_for_finish
       end
-      it 'does not keep old one' do
+
+      it 'restarts it' do
+        expect { subject; sleep 0.2 }.to change { subscription.state.send(:state) }.to(:running)
+      end
+      it 'is the same object' do
+        subject
+        sleep 0.2
+        expect(collection.subscriptions.first).to eq(subscription)
+      end
+      it 'does not create a new one' do
         expect { subject; sleep 0.2 }.not_to change { collection.subscriptions.size }
       end
-
-      describe 'replaced Subscription' do
-        subject { super(); sleep 0.2; collection.subscriptions.first }
-
-        let!(:position) { subscription.position }
-        let!(:client) { subscription.client }
-        let!(:setup) { subscription.setup }
-        let!(:statistic) { subscription.statistic }
-
-        it 'is another object' do
-          expect(subject.__id__).not_to eq(subscription.__id__)
-        end
-        it 'has the same SubscriptionPosition' do
-          expect(subject.position.__id__).to eq(position.__id__)
-        end
-        it 'has the same client' do
-          expect(subject.client.__id__).to eq(client.__id__)
-        end
-        it 'has the same SubscriptionSetup' do
-          expect(subject.setup.__id__).to eq(setup.__id__)
-        end
-        it 'has the SubscriptionStatistic' do
-          expect(subject.statistic.__id__).to eq(statistic.__id__)
-        end
-        it 'deletes old subscription' do
-          subject
-          expect(subscription).to be_frozen
-        end
-        it 'sets #last_restart_at of the statistic' do
-          subject
-          expect(subject.statistic.last_restart_at).to be_between(Time.now - 2, Time.now)
-        end
+      it 'updates #last_restart_at of the subscription' do
+        expect { subject; sleep 0.2 }.to change {
+          subscription.statistic.last_restart_at
+        }.to(be_between(Time.now, Time.now + 0.3))
       end
 
       context 'when restart terminator is given' do
@@ -114,15 +96,15 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
 
         context 'when it returns truthy result' do
           it 'does not restart the subscription' do
-            expect { subject; sleep 0.2 }.not_to change { collection.subscriptions.first.__id__ }
+            expect { subject; sleep 0.2 }.not_to change { subscription.state.send(:state) }
           end
         end
 
         context 'when it returns falsey result' do
           let(:restart_terminator) { nil }
 
-          it 'restarts the subscription' do
-            expect { subject; sleep 0.2 }.to change { collection.subscriptions.first.__id__ }
+          it 'restarts it' do
+            expect { subject; sleep 0.2 }.to change { subscription.state.send(:state) }.to(:running)
           end
         end
       end

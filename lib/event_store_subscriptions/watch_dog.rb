@@ -92,19 +92,9 @@ module EventStoreSubscriptions
     # @return [EventStoreSubscriptions::Subscription] newly created Subscription
     def restart_subscription(failed_sub)
       return if restart_terminator&.call(failed_sub)
-      # Check if no one else did this job
-      return unless collection.remove(failed_sub)
 
-      new_sub = Subscription.new(
-        position: failed_sub.position,
-        client: failed_sub.client,
-        setup: failed_sub.setup,
-        statistic: failed_sub.statistic
-      )
-      new_sub.statistic.last_restart_at = Time.now.utc
-      collection.add(new_sub)
-      failed_sub.delete
-      new_sub.listen
+      failed_sub.statistic.last_restart_at = Time.now.utc
+      failed_sub.listen
     end
   end
 end
