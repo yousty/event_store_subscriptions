@@ -67,6 +67,7 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
       let(:subscription) { collection.create_for_all(handler: proc { }) }
 
       before do
+        allow(subscription).to receive(:restart).and_call_original
         subscription.state.dead!
       end
 
@@ -75,20 +76,9 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
       end
 
       it 'restarts it' do
-        expect { subject; sleep 0.2 }.to change { subscription.state.send(:state) }.to(:running)
-      end
-      it 'is the same object' do
         subject
         sleep 0.2
-        expect(collection.subscriptions.first).to eq(subscription)
-      end
-      it 'does not create a new one' do
-        expect { subject; sleep 0.2 }.not_to change { collection.subscriptions.size }
-      end
-      it 'updates #last_restart_at of the subscription' do
-        expect { subject; sleep 0.2 }.to change {
-          subscription.statistic.last_restart_at
-        }.to(be_between(Time.now, Time.now + 0.3))
+        expect(subscription).to have_received(:restart)
       end
 
       context 'when restart terminator is given' do
@@ -96,7 +86,9 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
 
         context 'when it returns truthy result' do
           it 'does not restart the subscription' do
-            expect { subject; sleep 0.2 }.not_to change { subscription.state.send(:state) }
+            subject
+            sleep 0.2
+            expect(subscription).not_to have_received(:restart)
           end
         end
 
@@ -104,7 +96,9 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
           let(:restart_terminator) { nil }
 
           it 'restarts it' do
-            expect { subject; sleep 0.2 }.to change { subscription.state.send(:state) }.to(:running)
+            subject
+            sleep 0.2
+            expect(subscription).to have_received(:restart)
           end
         end
       end

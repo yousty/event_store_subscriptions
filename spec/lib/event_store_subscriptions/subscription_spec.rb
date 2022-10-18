@@ -118,62 +118,25 @@ RSpec.describe EventStoreSubscriptions::Subscription do
     end
   end
 
-  describe '#delete' do
-    subject { instance.delete }
+  describe '#restart' do
+    subject { instance.restart }
 
-    context 'when runner is alive' do
-      before do
-        stub_const('EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY', 0)
-        instance.listen
-        sleep 0.2
-      end
-
-      after do
-        instance.stop_listening.wait_for_finish
-      end
-
-      it 'raises error' do
-        expect { subject }.to(
-          raise_error(
-            EventStoreSubscriptions::ThreadNotDeadError,
-            /Can not delete alive Subscription/
-          )
-        )
-      end
+    before do
+      stub_const('EventStoreSubscriptions::Subscription::FORCED_SHUTDOWN_DELAY', 0)
+      instance.state.dead!
     end
 
-    context 'when runner is dead' do
-      let(:runner) { Thread.new { }.join }
+    after do
+      instance.stop_listening.wait_for_finish
+    end
 
-      before do
-        instance.instance_variable_set(:@runner, runner)
-      end
-
-      it 'does not raise error' do
-        expect { subject }.not_to raise_error
-      end
-      it 'unassigns @position instance variable' do
-        expect { subject }.to change { instance.instance_variable_get(:@position) }.to(nil)
-      end
-      it 'unassigns @client instance variable' do
-        expect { subject }.to change { instance.instance_variable_get(:@client) }.to(nil)
-      end
-      it 'unassigns @setup instance variable' do
-        expect { subject }.to change { instance.instance_variable_get(:@setup) }.to(nil)
-      end
-      it 'unassigns @state instance variable' do
-        expect { subject }.to change { instance.instance_variable_get(:@state) }.to(nil)
-      end
-      it 'unassigns @runner instance variable' do
-        expect { subject }.to change { instance.instance_variable_get(:@runner) }.to(nil)
-      end
-      it 'unassigns @statistic instance variable' do
-        expect { subject }.to change { instance.instance_variable_get(:@statistic) }.to(nil)
-      end
-      it 'returns self' do
-        is_expected.to eq(instance)
-      end
-      it { is_expected.to be_frozen }
+    it 'restarts it' do
+      expect { subject; sleep 0.2 }.to change { instance.state.send(:state) }.to(:running)
+    end
+    it 'updates #last_restart_at of the subscription' do
+      expect { subject; sleep 0.2 }.to change {
+        instance.statistic.last_restart_at
+      }.to(be_between(Time.now, Time.now + 0.3))
     end
   end
 

@@ -3,6 +3,7 @@
 module EventStoreSubscriptions
   # Implements Subscription-s collection
   class Subscriptions
+    extend MakeAtomic
     ALL_STREAM = '$all'
 
     attr_reader :client
@@ -37,34 +38,34 @@ module EventStoreSubscriptions
     # Adds Subscription to the collection
     # @param subscription [EventStoreSubscriptions::Subscription]
     # @return [Array<EventStoreSubscriptions::Subscription>] current subscription's collection
-    def add(subscription)
-      semaphore.synchronize { @subscriptions << subscription }
+    make_atomic def add(subscription)
+      @subscriptions << subscription
     end
 
     # Removes subscription from the collection
     # @param subscription [EventStoreSubscriptions::Subscription]
     # @return [EventStoreSubscriptions::Subscription, nil] returns deleted subscription or nil if it
     #   wasn't present in the collection
-    def remove(subscription)
-      semaphore.synchronize { @subscriptions.delete(subscription) }
+    make_atomic def remove(subscription)
+      @subscriptions.delete(subscription)
     end
 
     # Starts listening to all subscriptions in the collection
     # @return [Array<EventStoreSubscriptions::Subscription>]
-    def listen_all
-      semaphore.synchronize { @subscriptions.each(&:listen) }
+    make_atomic def listen_all
+      @subscriptions.each(&:listen)
     end
 
     # Stops listening to all subscriptions in the collection
     # @return [Array<EventStoreSubscriptions::Subscription>]
-    def stop_all
-      semaphore.synchronize { @subscriptions.each(&:stop_listening) }
+    make_atomic def stop_all
+      @subscriptions.each(&:stop_listening)
     end
 
     # @return [Array<EventStoreSubscriptions::Subscription>]
-    def subscriptions
+    make_atomic def subscriptions
       # Duping original collection to prevent potential mutable operations over it from user's side
-      semaphore.synchronize { @subscriptions.dup }
+      @subscriptions.dup
     end
 
     private

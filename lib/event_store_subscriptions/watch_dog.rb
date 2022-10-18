@@ -93,8 +93,7 @@ module EventStoreSubscriptions
     def restart_subscription(failed_sub)
       return if restart_terminator&.call(failed_sub)
 
-      failed_sub.statistic.last_restart_at = Time.now.utc
-      failed_sub.listen
+      failed_sub.restart
     end
   end
 end

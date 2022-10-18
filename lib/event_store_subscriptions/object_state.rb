@@ -10,7 +10,6 @@ module EventStoreSubscriptions
     STATES = %i(initial running halting stopped dead).freeze
 
     def initialize
-      @semaphore = Thread::Mutex.new
       initial!
     end
 
@@ -18,13 +17,13 @@ module EventStoreSubscriptions
       # Checks whether the object is in appropriate state
       # @return [Boolean]
       define_method "#{state}?" do
-        semaphore.synchronize { self.state == state }
+        self.state == state
       end
 
       # Sets the state.
       # @return [Symbol]
       define_method "#{state}!" do
-        semaphore.synchronize { self.state = state }
+        self.state = state
       end
     end
 

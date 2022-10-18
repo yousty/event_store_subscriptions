@@ -3,11 +3,12 @@
 module EventStoreSubscriptions
   class Subscription
     include WaitForFinish
+    extend MakeAtomic
 
     FORCED_SHUTDOWN_DELAY = 60 # seconds
 
     attr_accessor :runner
-    attr_reader :client, :setup, :state, :position, :statistic
+    attr_reader :client, :setup, :state, :position, :statistic, :semaphore
     private :runner, :runner=
 
     # @param position [EventStoreSubscriptions::SubscriptionPosition, EventStoreSubscriptions::SubscriptionRevision]
@@ -21,36 +22,19 @@ module EventStoreSubscriptions
       @state = ObjectState.new
       @statistic = statistic
       @runner = nil
+      @semaphore = Mutex.new
     end
 
     # Start listening for the events
     # @return [EventStoreSubscriptions::Subscription] returns self
-    def listen
-      self.runner ||=
-        begin
-          state.running!
-          Thread.new do
-            Thread.current.abort_on_exception = false
-            Thread.current.report_on_exception = false
-            client.subscribe_to_stream(
-              *setup.args,
-              **adjusted_kwargs,
-              &setup.blk
-            )
-          rescue StandardError => e
-            statistic.last_error = e
-            statistic.errors_count += 1
-            state.dead!
-            raise
-          end
-        end
-      self
+    make_atomic def listen
+      _listen
     end
 
     # Stops listening for events. This command is async - the result is not immediate. Use the #wait_for_finish 
     # method to wait until the runner has fully stopped.
     # @return [EventStoreSubscriptions::Subscription] returns self
-    def stop_listening
+    make_atomic def stop_listening
       return self unless runner&.alive?
 
       state.halting!
@@ -71,21 +55,37 @@ module EventStoreSubscriptions
       self
     end
 
-    # Removes all properties of object and freezes it. You can't delete currently running
-    #   Subscription though. You must stop it first.
-    # @return [EventStoreSubscriptions::Subscription] frozen object
-    # @raise [EventStoreSubscriptions::ThreadNotDeadError] raises this error in case runner Thread
-    #   is still alive for some reason. Normally this should never happen.
-    def delete
-      if runner&.alive?
-        raise ThreadNotDeadError, "Can not delete alive Subscription #{self.inspect}"
-      end
+    make_atomic def restart
+      return self if runner&.alive?
 
-      instance_variables.each { |var| instance_variable_set(var, nil) }
-      freeze
+      statistic.last_restart_at = Time.now.utc
+      _listen
     end
 
     private
+
+    # @return [EventStoreSubscriptions::Subscription] returns self
+    def _listen
+      self.runner ||=
+        begin
+          state.running!
+          Thread.new do
+            Thread.current.abort_on_exception = false
+            Thread.current.report_on_exception = false
+            client.subscribe_to_stream(
+              *setup.args,
+              **adjusted_kwargs,
+              &setup.blk
+            )
+          rescue StandardError => e
+            statistic.last_error = e
+            statistic.errors_count += 1
+            state.dead!
+            raise
+          end
+        end
+      self
+    end
 
     # Wraps original handler into our own handler to provide extended functionality.
     # @param original_handler [#call]
