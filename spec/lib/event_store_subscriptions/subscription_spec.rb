@@ -138,6 +138,9 @@ RSpec.describe EventStoreSubscriptions::Subscription do
         instance.statistic.last_restart_at
       }.to(be_between(Time.now, Time.now + 0.3))
     end
+    it 'reassigns #runner' do
+      expect { subject; sleep 0.2 }.to change { instance.send(:runner).__id__ }
+    end
   end
 
   describe 'integration' do

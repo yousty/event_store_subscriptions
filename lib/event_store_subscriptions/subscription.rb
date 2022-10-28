@@ -58,6 +58,7 @@ module EventStoreSubscriptions
     make_atomic def restart
       return self if runner&.alive?
 
+      self.runner = nil
       statistic.last_restart_at = Time.now.utc
       _listen
     end
