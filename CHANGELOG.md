@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.1.1] - 2022-10-28
+
+Fix restarting of subscriptions
+
 ## [1.1.0] - 2022-10-18
 
 - Improve API atomicity
