@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.1.2] - 2022-10-31
+
+Calculate processed events number more accurately
+
 ## [1.1.1] - 2022-10-28
 
 Fix restarting of subscriptions
