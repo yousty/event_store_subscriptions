@@ -207,6 +207,50 @@ RSpec.describe EventStoreSubscriptions::Subscription do
       end
     end
 
+    describe 'non-events responses processing' do
+      subject do
+        instance.listen
+      end
+
+      before do
+        allow(instance.position).to receive(:update).and_call_original
+      end
+
+      after do
+        instance.stop_listening.wait_for_finish
+      end
+
+      it 'tries to update the position from the response' do
+        subject
+        sleep 0.5
+        expect(instance.position).to have_received(:update).at_least(:once)
+      end
+      it 'does not update processed events number' do
+        expect { subject; sleep 0.5 }.not_to change { instance.statistic.events_processed }
+      end
+      it 'does not process events using provided handler' do
+        expect { subject; sleep 0.5 }.not_to change { responses.size }
+      end
+
+      context 'when skip_deserialization is true' do
+        before do
+          kwargs[:skip_deserialization] = true
+        end
+
+        it 'processes events using provided handler' do
+          expect { subject; sleep 0.5 }.to change { responses.size }
+        end
+        it 'tries to update the position from the response' do
+          subject
+          sleep 0.5
+          expect(instance.position).to have_received(:update).at_least(:once)
+        end
+        it 'updates number of processed events' do
+          expect { subject; sleep 0.5 }.to change { instance.statistic.events_processed }
+        end
+      end
+    end
+
     context 'when SubscriptionPosition is present' do
       let(:options) do
         {

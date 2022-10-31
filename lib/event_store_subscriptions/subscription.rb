@@ -99,8 +99,10 @@ module EventStoreSubscriptions
           original_result,
           *process_response_args
         )
-        original_handler.call(result) if result
-        statistic.events_processed += 1
+        if result
+          original_handler.call(result)
+          statistic.events_processed += 1
+        end
         position.update(original_result)
       end
     end
