@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.1.3] - 2022-11-01
+
+Fix `EventStoreSubscriptions::WatchDog.watch` method to correctly handle `restart_terminator` argument
+
 ## [1.1.2] - 2022-10-31
 
 Calculate processed events number more accurately
