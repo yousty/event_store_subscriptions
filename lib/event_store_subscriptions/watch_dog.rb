@@ -13,7 +13,7 @@ module EventStoreSubscriptions
       # @param restart_terminator [Proc, nil]
       # @return [EventStoreSubscriptions::WatchDog]
       def watch(collection, restart_terminator: nil)
-        new(collection).watch
+        new(collection, restart_terminator: restart_terminator).watch
       end
     end
 

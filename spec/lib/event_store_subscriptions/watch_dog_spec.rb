@@ -18,7 +18,9 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
   end
 
   describe '.watch' do
-    subject { described_class.watch(collection) }
+    subject { described_class.watch(collection, restart_terminator: restart_terminator) }
+
+    let(:restart_terminator) { proc { } }
 
     before do
       allow(described_class).to receive(:new).and_wrap_original do |original_method, *args, **kwargs, &blk|
@@ -35,6 +37,9 @@ RSpec.describe EventStoreSubscriptions::WatchDog do
     it { is_expected.to be_a(described_class) }
     it 'starts watching after the given collection' do
       expect(subject).to have_received(:watch)
+    end
+    it 'has correct restart_terminator' do
+      expect(subject.send(:restart_terminator)).to eq(restart_terminator)
     end
   end
 
