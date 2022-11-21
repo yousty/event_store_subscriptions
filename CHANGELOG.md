@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.1.4] - 2022-11-21
+
+Update `event_store_client` to 2.1.x
+
 ## [1.1.3] - 2022-11-01
 
 Fix `EventStoreSubscriptions::WatchDog.watch` method to correctly handle `restart_terminator` argument
