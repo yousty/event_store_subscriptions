@@ -95,10 +95,11 @@ module EventStoreSubscriptions
       proc do |result|
         Thread.current.exit unless state.running?
         original_result = result.success
-        result = EventStoreClient::GRPC::Shared::Streams::ProcessResponse.new.call(
-          original_result,
-          *process_response_args
-        )
+        result =
+          EventStoreClient::GRPC::Shared::Streams::ProcessResponse.new(config: client.config).call(
+            original_result,
+            *process_response_args
+          )
         if result
           original_handler.call(result)
           statistic.events_processed += 1
