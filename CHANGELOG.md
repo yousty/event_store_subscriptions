@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.2.0-beta] - 2022-12-20
+
+Update `event_store_client` to 2.3.0-beta2
+
 ## [1.1.4] - 2022-11-21
 
 Update `event_store_client` to 2.1.x
