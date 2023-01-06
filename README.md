@@ -35,12 +35,8 @@ Use the `#create` method in order to subscribe to specific stream:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-handler = proc do |resp|
-  if resp.success?
-    do_something_with_resp(resp.success) # retrieve an event
-  else # resp.failure? => true
-    handle_failure(resp.failure)
-  end
+handler = proc do |event|
+  # process event
 end
 subscriptions.create('some-stream', handler: handler)
 subscriptions.listen_all
@@ -50,12 +46,8 @@ You may provide any object which responds to `#call` as a handler:
 
 ```ruby
 class SomeStreamHandler
-  def call(resp)
-    if resp.success?
-      do_something_with_resp(resp.success) # retrieve an event
-    else # resp.failure? => true
-      handle_failure(resp.failure)
-    end
+  def call(event)
+    # process event
   end
 end
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
@@ -69,12 +61,8 @@ Use the `#create_for_all` method to subscribe to the all stream:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-handler = proc do |resp|
-  if resp.success?
-    do_something_with_resp(resp.success) # retrieve an event
-  else # resp.failure? => true
-    handle_failure(resp.failure)
-  end
+handler = proc do |event|
+  # process event
 end
 subscriptions.create_for_all(handler: handler)
 subscriptions.listen_all
@@ -84,12 +72,8 @@ You may also explicitly pass `"$all"` stream name to the `#create` method:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-handler = proc do |resp|
-  if resp.success?
-    do_something_with_resp(resp.success) # retrieve an event
-  else # resp.failure? => true
-    handle_failure(resp.failure)
-  end
+handler = proc do |event|
+  # process event
 end
 subscriptions.create('$all', handler: handler)
 subscriptions.listen_all
@@ -105,7 +89,7 @@ A handler registered to receive position updates of a specific stream is called 
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscription = subscriptions.create('some-stream', handler: proc { |r| p r })
+subscription = subscriptions.create('some-stream', handler: proc { |event| p event })
 subscription.position.register_update_hook do |position|
   puts "Current revision is #{position.revision}"
 end
@@ -118,7 +102,7 @@ A handler registered to receive position updates of the `$all` stream is called 
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscription = subscriptions.create_for_all(handler: proc { |r| p r })
+subscription = subscriptions.create_for_all(handler: proc { |event| p event })
 subscription.position.register_update_hook do |position|
   puts "Current commit/prepare positions are #{position.commit_position}/#{position.prepare_position}"
 end
@@ -133,7 +117,7 @@ Start watching over your subscriptions' collection:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscriptions.create_for_all(handler: proc { |r| p r })
+subscriptions.create_for_all(handler: proc { |event| p event })
 EventStoreSubscriptions::WatchDog.watch(subscriptions)
 subscriptions.listen_all
 ```
@@ -154,7 +138,7 @@ For single subscription:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscription = subscriptions.create_for_all(handler: proc { |r| p r })
+subscription = subscriptions.create_for_all(handler: proc { |event| p event })
 subscription.listen
 
 # Initiate Subscription shutdown
@@ -167,7 +151,7 @@ For the entire collection:
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscriptions.create_for_all(handler: proc { |r| p r })
+subscriptions.create_for_all(handler: proc { |event| p event })
 subscriptions.listen_all
 
 # Initiate shutdown for each Subscription in the collection
@@ -194,7 +178,7 @@ You may want to gracefully shut down the process that handles the subscriptions.
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscriptions.create_for_all(handler: proc { |r| p r })
+subscriptions.create_for_all(handler: proc { |event| p event })
 watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
 subscriptions.listen_all
 
@@ -225,7 +209,7 @@ After you started listening your Subscriptions, you may want to monitor status o
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscriptions.create_for_all(handler: proc { |r| p r })
+subscriptions.create_for_all(handler: proc { |event| p event })
 watcher = EventStoreSubscriptions::WatchDog.watch(subscriptions)
 subscriptions.listen_all
 
@@ -249,7 +233,7 @@ You may want to decide yourself whether `WhatchDog` should restart a `Subscripti
 
 ```ruby
 subscriptions = EventStoreSubscriptions::Subscriptions.new(EventStoreClient.client)
-subscriptions.create_for_all(handler: proc { |r| p r })
+subscriptions.create_for_all(handler: proc { |event| p event })
 # Do not restart Subscription if its id is even
 restart_terminator = proc { |sub| sub.__id__ % 2 == 0 }
 EventStoreSubscriptions::WatchDog.watch(subscriptions, restart_terminator: restart_terminator)
