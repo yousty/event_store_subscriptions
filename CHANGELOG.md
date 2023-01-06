@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [2.0.0] - 2023-01-06
+
+**Breaking changes**:
+ - Update `event_store_client` to 3.0.0. See `event_store_client` changelog for details.
+
 ## [1.2.0] - 2022-12-23
 
 Update `event_store_client` to 2.3.0
