@@ -92,19 +92,18 @@ module EventStoreSubscriptions
     # @param original_handler [#call]
     # @return [Proc]
     def handler(original_handler)
-      proc do |result|
+      proc do |raw_resp|
         Thread.current.exit unless state.running?
-        original_result = result.success
-        result =
+        event_or_raw_resp =
           EventStoreClient::GRPC::Shared::Streams::ProcessResponse.new(config: client.config).call(
-            original_result,
+            raw_resp,
             *process_response_args
           )
-        if result
-          original_handler.call(result)
+        if event_or_raw_resp
+          original_handler.call(event_or_raw_resp)
           statistic.events_processed += 1
         end
-        position.update(original_result)
+        position.update(raw_resp)
       end
     end
 

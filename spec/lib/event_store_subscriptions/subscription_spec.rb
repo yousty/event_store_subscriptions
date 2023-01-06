@@ -200,9 +200,8 @@ RSpec.describe EventStoreSubscriptions::Subscription do
           sleep 0.5
         end
 
-        it { is_expected.to be_a(Dry::Monads::Success) }
         it 'belongs to correct stream' do
-          expect(subject.success.stream_name).to eq(stream_name)
+          expect(subject.stream_name).to eq(stream_name)
         end
       end
     end
@@ -264,7 +263,7 @@ RSpec.describe EventStoreSubscriptions::Subscription do
         position =
           EventStoreClient.client.append_to_stream(
             stream_name, EventStoreClient::DeserializedEvent.new
-          ).success.success.position
+          ).success.position
         instance.position.commit_position = position.commit_position
         instance.position.prepare_position = position.prepare_position
         # Generate another event for another stream. It will help us to ensure that the given
