@@ -17,7 +17,7 @@ module EventStoreSubscriptions
     #   `event_store_client` gem.
     # @return [Boolean] whether the position was updated
     def update(response)
-      source = response.checkpoint || response.event&.event
+      source = response.event&.event
       return false unless source
 
       # Updating position values in memory first to prevent the situation when the update hook fails,

@@ -56,8 +56,30 @@ RSpec.describe EventStoreSubscriptions::SubscriptionPosition do
       end
     end
 
+    shared_examples 'does not process response' do
+      it { is_expected.to eq(false) }
+      it 'does not update positions' do
+        expect { subject }.not_to change { instance }
+      end
+      it 'does not execute registered update hooks' do
+        expect { subject }.not_to change { positions.size }
+      end
+    end
+
     context 'when response is a checkpoint' do
-      it_behaves_like 'processes response'
+      it_behaves_like 'does not process response'
+    end
+
+    context 'when response is a subscription confirmation' do
+      let(:response) do
+        EventStore::Client::Streams::ReadResp.new(
+          confirmation: EventStore::Client::Streams::ReadResp::SubscriptionConfirmation.new(
+            subscription_id: SecureRandom.uuid
+          )
+        )
+      end
+
+      it_behaves_like 'does not process response'
     end
 
     context 'when response is an event' do
@@ -82,13 +104,7 @@ RSpec.describe EventStoreSubscriptions::SubscriptionPosition do
         )
       end
 
-      it { is_expected.to eq(false) }
-      it 'does not update positions' do
-        expect { subject }.not_to change { instance }
-      end
-      it 'does not execute registered update hooks' do
-        expect { subject }.not_to change { positions.size }
-      end
+      it_behaves_like 'does not process response'
     end
   end
 
