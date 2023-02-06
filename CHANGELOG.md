@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.2.1, 2.0.1] - 2023-02-06
+
+- Do not rely on any response except event response when updating subscription's position.
+
 ## [2.0.0] - 2023-01-06
 
 **Breaking changes**:
