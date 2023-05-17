@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [2.1.0] - 2023-05-17
+
+- Drop support of ruby 2.7. Requirement is ruby 3+ now.
+- Bump `event_store_client` to v3.1.0+
+
 ## [1.2.1, 2.0.1] - 2023-02-06
 
 - Do not rely on any response except event response when updating subscription's position.
