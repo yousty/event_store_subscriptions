@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = "Implementation of subscription manager for `event_store_client` gem."
   spec.homepage      = "https://github.com/yousty/event_store_subscriptions"
   spec.license       = "MIT"
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = '>= 3.0.0'
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
@@ -24,9 +24,9 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "event_store_client", '~> 3.0.0'
+  spec.add_dependency "event_store_client", '~> 3.1.0'
 
   spec.add_development_dependency 'pry', '~> 0.14'
-  spec.add_development_dependency 'rspec', '~> 3.11'
+  spec.add_development_dependency 'rspec', '~> 3.12'
   spec.add_development_dependency 'rake', '~> 13.0'
 end
